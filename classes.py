@@ -192,6 +192,10 @@ class SoundManager:
             self.__computerwonround.set_volume(0.15)
             self.__newroundin = pygame.mixer.Sound('Resources\\newroundin.wav')
             self.__newroundin.set_volume(0.15)
+            self.__losingmusic = pygame.mixer.Sound('Resources\\losingmusic.wav')
+            self.__losingmusic.set_volume(0.15)
+            self.__winningmusic = pygame.mixer.Sound('Resources\\winningmusic.wav')
+            self.__winningmusic.set_volume(0.15)
             pygame.mixer.music.load('Resources\\music.ogg')
             self.__musicPlaying = False
 
@@ -207,6 +211,13 @@ class SoundManager:
         pygame.time.wait(1300)
         self.__announcerOne.play()
         pygame.time.wait(1300)
+
+    def endround(self, winner):
+        pygame.mixer.music.stop()
+        if winner == 0:
+            self.__losingmusic.play()
+        else:
+            self.__winningmusic.play()
 
     @staticmethod
     def threadedsound(function):
@@ -235,12 +246,12 @@ class SoundManager:
     def playerwonround(self):
         self.__playerwonround.play()
         pygame.time.wait(3000)
-        self.__newroundin.play()
-        pygame.time.wait(2000)
 
     def computerwonround(self):
         self.__computerwonround.play()
         pygame.time.wait(3000)
+
+    def nextround(self):
         self.__newroundin.play()
         pygame.time.wait(2000)
 
@@ -250,9 +261,22 @@ class ScoreManager:
     def __init__(self):
         self.__roundScores = [0, 0]
         self.__matches = [0, 0]
+        self.__gameover = False
+
+    def getgameover(self):
+        return self.__gameover
+
+    def getwinner(self):
+        if self.__matches[0] >= 3:
+            return 0
+        else:
+            return 1
 
     def debug_setscore(self, scores):
         self.__roundScores = scores
+
+    def debug_setmatches(self, matches):
+        self.__matches = matches
 
     def computerscored(self, soundmanager):
         self.__roundScores[0] += 1
@@ -279,10 +303,18 @@ class ScoreManager:
     def __endroundcomputer(self, soundmanager):
         self.__roundScores = [0, 0]
         soundmanager.threadedsound(soundmanager.computerwonround)
+        if self.__matches[0] >= 3:
+            self.__gameover = True
+        else:
+            soundmanager.threadedsound(soundmanager.nextround)
 
     def __endroundplayer(self, soundmanager):
         self.__roundScores = [0, 0]
         soundmanager.threadedsound(soundmanager.playerwonround)
+        if self.__matches[1] >= 3:
+            self.__gameover = True
+        else:
+            soundmanager.threadedsound(soundmanager.nextround)
 
     def displayscore(self, windowsurface):
         # Computer Score

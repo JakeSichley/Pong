@@ -53,7 +53,10 @@ invalidPaddles = []
 SoundManager.getinstance().startgame()
 roundStart = True
 
-score.debug_setscore([10, 7])
+score.debug_setscore([6, 10])
+score.debug_setmatches([2, 2])
+
+print(str(score.getgameover()))
 
 while True:
     # Clear and re-blit background
@@ -61,6 +64,14 @@ while True:
     windowSurface.blit(gameBackgroundImage, gameBackgroundRect)
     windowSurface.blit(ball.getimage(), ball.getrect())
     score.displayscore(windowSurface)
+
+    if score.getgameover():
+        SoundManager.threadedsound(SoundManager.getinstance().endround(score.getwinner()))
+        while True:
+            for event in pygame.event.get():
+                if event.type == QUIT:
+                    pygame.quit()
+                    sys.exit()
 
     if roundStart:
         playerPaddleTop.resetposition(int(WINDOWWIDTH * .75) - 20, 0)
@@ -78,7 +89,7 @@ while True:
 
     if roundStart:
         pygame.display.update()
-        SoundManager.getinstance().threadedsound(SoundManager.getinstance().startround)
+        SoundManager.threadedsound(SoundManager.getinstance().startround)
         pygame.event.clear()
         moveLeft = False
         moveRight = False
