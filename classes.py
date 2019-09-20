@@ -220,18 +220,72 @@ class SoundManager:
         pygame.time.wait(3000)
 
 
+# round -> game -> match
 class ScoreManager:
     def __init__(self):
-        self.__playerScore = 0
-        self.__computerScore = 0
+        self.__roundScores = [0, 0]
+        self.__matches = [0, 0]
 
-    def playerscored(self, soundmanager):
-        self.__playerScore += 1
-        soundmanager.roundwon()
+    def debug_setscore(self, scores):
+        self.__roundScores = scores
 
     def computerscored(self, soundmanager):
-        self.__computerScore += 1
+        self.__roundScores[0] += 1
         soundmanager.roundlost()
+        self.__checkforcomputerwonround(soundmanager)
+
+    def playerscored(self, soundmanager):
+        self.__roundScores[1] += 1
+        soundmanager.roundwon()
+        self.__checkforplayerwonround(soundmanager)
+
+    def __checkforcomputerwonround(self, soundmanager):
+        if self.__roundScores[0] > self.__roundScores[1] and self.__roundScores[0] >= 11 and\
+           self.__roundScores[0] - self.__roundScores[1] >= 2:
+            self.__matches[0] += 1
+            self.__endround(soundmanager)
+
+    def __checkforplayerwonround(self, soundmanager):
+        if self.__roundScores[1] > self.__roundScores[0] and self.__roundScores[1] >= 11 and\
+           self.__roundScores[1] - self.__roundScores[0] >= 2:
+            self.__matches[1] += 1
+            self.__endround(soundmanager)
+
+    def __endround(self, soundmanager):
+        self.__roundScores = [0, 0]
+
+    def displayscore(self, windowsurface):
+        # Computer Score
+        font = pygame.font.Font('Resources\\gameover.ttf', 60)
+        text = 'Round: ' + str(self.__roundScores[0]) + '     Match: ' + str(self.__matches[0])
+        textsurface = font.render(text, True, (255, 255, 255))
+        textrect = textsurface.get_rect()
+        textrect.center = (125, 475)
+        windowsurface.blit(textsurface, textrect)
+        # Player Score
+        text = 'Round: ' + str(self.__roundScores[1]) + '     Match: ' + str(self.__matches[1])
+        textsurface = font.render(text, True, (255, 255, 255))
+        textrect = textsurface.get_rect()
+        textrect.center = (675, 475)
+        windowsurface.blit(textsurface, textrect)
+        # Score Needed
+        neededscores = [self.__getpointsneededforwin(self.__roundScores[0], self.__roundScores[1]),
+                        self.__getpointsneededforwin(self.__roundScores[1], self.__roundScores[0])]
+        scoreneeded = neededscores[0] if neededscores[0] > neededscores[1] else neededscores[1]
+        text = 'Round Point at: ' + str(scoreneeded)
+        textsurface = font.render(text, True, (255, 255, 255))
+        textrect = textsurface.get_rect()
+        textrect.center = (400, 475)
+        windowsurface.blit(textsurface, textrect)
+
+    @staticmethod
+    def __getpointsneededforwin(scorea, scoreb):
+        if scorea < 9:
+            return 11
+        elif scorea > scoreb:
+            return scoreb + 2
+        else:
+            return scorea + (2 - abs(scorea - scoreb))
 
 
 class Paddle:
