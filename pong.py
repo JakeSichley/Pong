@@ -53,7 +53,7 @@ invalidPaddles = []
 SoundManager.getinstance().startgame()
 roundStart = True
 
-score.debug_setscore([8, 8])
+score.debug_setscore([10, 7])
 
 while True:
     # Clear and re-blit background
@@ -70,7 +70,12 @@ while True:
 
     if roundStart:
         pygame.display.update()
-        SoundManager.getinstance().threadedstartround()
+        SoundManager.getinstance().threadedsound(SoundManager.getinstance().startround)
+        pygame.event.clear()
+        moveLeft = False
+        moveRight = False
+        moveUp = False
+        moveDown = False
         roundStart = False
 
     ball.move(WINDOWWIDTH, WINDOWHEIGHT)
