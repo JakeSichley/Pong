@@ -107,8 +107,9 @@ class Ball:
         self.__image = pygame.image.load(image)
         self.__rect = pygame.Rect(left, top, self.__image.get_size()[0], self.__image.get_size()[1])
         self.__collisionPending = False
+        self.__hits = 0
         # Set up x and y movement
-        movespeed = random.randint(6, 10)
+        movespeed = random.randint(6, 8)
         angle = random.randint(20, 55)
         self.__velocities = [int(movespeed * cos(radians(angle))), int(movespeed * sin(radians(angle)))]
         if random.randint(0, 1) == 0:
@@ -151,10 +152,26 @@ class Ball:
     def hithorizontal(self):
         self.__velocities[0] *= -1
         self.__collisionPending = False
+        self.__hits += 1
+        if self.__hits >= 6:
+            self.__increasespeed()
 
     def hitvertical(self):
         self.__velocities[1] *= -1
         self.__collisionPending = False
+        self.__hits += 1
+        if self.__hits >= 6:
+            self.__increasespeed()
+
+    def __increasespeed(self):
+        print(self.__velocities)
+        direction = random.randint(0, 1)
+        if self.__velocities[direction] >= 0:
+            self.__velocities[direction] += 1
+        else:
+            self.__velocities[direction] -= 1
+        print(self.__velocities)
+        self.__hits = 0
 
 
 # Singleton class SoundManager
@@ -272,11 +289,10 @@ class ScoreManager:
         else:
             return 1
 
-    def debug_setscore(self, scores):
-        self.__roundScores = scores
-
-    def debug_setmatches(self, matches):
-        self.__matches = matches
+    def reset(self):
+        self.__roundScores = [0, 0]
+        self.__matches = [0, 0]
+        self.__gameover = False
 
     def computerscored(self, soundmanager):
         self.__roundScores[0] += 1
@@ -350,7 +366,80 @@ class ScoreManager:
             return scorea + (2 - abs(scorea - scoreb))
 
 
-class Paddle:
-    def __init__(self, image, left, top):
-        self.image = pygame.image.load(image)
-        self.rect = pygame.Rect(left, top, self.image.get_size()[0], self.image.get_size()[1])
+class MenuManager:
+    def __init__(self, surface):
+        self.__windowsurface = surface
+
+    def startingmenu(self):
+        font = pygame.font.Font('Resources\\gameover.ttf', 100)
+        text = 'Welcome to Pong!'
+        textsurface = font.render(text, True, (255, 255, 255))
+        textrect = textsurface.get_rect()
+        textrect.center = (400, 125)
+        self.__windowsurface.blit(textsurface, textrect)
+
+        font = pygame.font.Font('Resources\\gameover.ttf', 60)
+        text = '-/+ keys can be used to adjust computer paddle speed!'
+        textsurface = font.render(text, True, (255, 255, 255))
+        textrect = textsurface.get_rect()
+        textrect.center = (400, 250)
+        self.__windowsurface.blit(textsurface, textrect)
+
+        text = 'Ball speed increases every 6th hit!'
+        textsurface = font.render(text, True, (255, 255, 255))
+        textrect = textsurface.get_rect()
+        textrect.center = (400, 325)
+        self.__windowsurface.blit(textsurface, textrect)
+
+        text = 'Press \'Y\' to start or \'N\' to exit!'
+        textsurface = font.render(text, True, (255, 255, 255))
+        textrect = textsurface.get_rect()
+        textrect.center = (400, 400)
+        self.__windowsurface.blit(textsurface, textrect)
+
+        pygame.display.update()
+        waitforinput = True
+
+        while waitforinput:
+            for event in pygame.event.get():
+                if event.type == QUIT:
+                    pygame.quit()
+                    sys.exit()
+                if event.type == KEYDOWN:
+                    if event.key == K_n:
+                        pygame.quit()
+                        sys.exit()
+                    if event.key == K_y:
+                        waitforinput = False
+
+    def endingmenu(self, winner):
+        self.__windowsurface.fill((0, 0, 0))
+
+        font = pygame.font.Font('Resources\\gameover.ttf', 100)
+        text = 'The Computer Won!' if winner == 0 else 'You Won!'
+        textsurface = font.render(text, True, (255, 255, 255))
+        textrect = textsurface.get_rect()
+        textrect.center = (400, 125)
+        self.__windowsurface.blit(textsurface, textrect)
+
+        font = pygame.font.Font('Resources\\gameover.ttf', 60)
+        text = 'Press \'Y\' to play again or \'N\' to exit!'
+        textsurface = font.render(text, True, (255, 255, 255))
+        textrect = textsurface.get_rect()
+        textrect.center = (400, 325)
+        self.__windowsurface.blit(textsurface, textrect)
+
+        pygame.display.update()
+        waitforinput = True
+
+        while waitforinput:
+            for event in pygame.event.get():
+                if event.type == QUIT:
+                    pygame.quit()
+                    sys.exit()
+                if event.type == KEYDOWN:
+                    if event.key == K_n:
+                        pygame.quit()
+                        sys.exit()
+                    if event.key == K_y:
+                        waitforinput = False

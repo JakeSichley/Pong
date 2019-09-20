@@ -1,4 +1,3 @@
-# import pygame
 from classes import *
 from pygame.locals import *
 import sys
@@ -21,7 +20,7 @@ gameBackgroundRect = pygame.Rect(0, 0, 800, 450)
 # Set up game constants
 BLACK = (0, 0, 0)
 MOVESPEED = 5
-CMOVESPEED = 3
+CMOVESPEED = 4
 moveLeft = False
 moveRight = False
 moveUp = False
@@ -53,10 +52,10 @@ invalidPaddles = []
 SoundManager.getinstance().startgame()
 roundStart = True
 
-score.debug_setscore([6, 10])
-score.debug_setmatches([2, 2])
-
-print(str(score.getgameover()))
+menu = MenuManager(windowSurface)
+windowSurface.fill(BLACK)
+menu.startingmenu()
+pygame.display.update()
 
 while True:
     # Clear and re-blit background
@@ -67,11 +66,15 @@ while True:
 
     if score.getgameover():
         SoundManager.threadedsound(SoundManager.getinstance().endround(score.getwinner()))
-        while True:
-            for event in pygame.event.get():
-                if event.type == QUIT:
-                    pygame.quit()
-                    sys.exit()
+        menu.endingmenu(score.getwinner())
+        pygame.mixer.stop()
+        roundStart = True
+        windowSurface.fill(BLACK)
+        windowSurface.blit(gameBackgroundImage, gameBackgroundRect)
+        windowSurface.blit(ball.getimage(), ball.getrect())
+        score.displayscore(windowSurface)
+        SoundManager.getinstance().startgame()
+        score.reset()
 
     if roundStart:
         playerPaddleTop.resetposition(int(WINDOWWIDTH * .75) - 20, 0)
@@ -117,6 +120,14 @@ while True:
             if event.key == K_DOWN or event.key == K_s:
                 moveUp = False
                 moveDown = True
+            if event.key == K_MINUS:
+                print(CMOVESPEED)
+                if CMOVESPEED >= 3:
+                    CMOVESPEED -= 1
+            if event.key == K_EQUALS:
+                print(CMOVESPEED)
+                if CMOVESPEED <= 9:
+                    CMOVESPEED += 1
         if event.type == KEYUP:
             if event.key == K_ESCAPE:
                 pygame.quit()
