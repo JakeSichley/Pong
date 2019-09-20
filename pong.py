@@ -1,7 +1,7 @@
 # import pygame
-import sys
 from classes import *
 from pygame.locals import *
+import sys
 
 # Set up pygame
 pygame.init()
@@ -10,7 +10,8 @@ mainClock = pygame.time.Clock()
 # Set up window
 WINDOWWIDTH = 800
 WINDOWHEIGHT = 450
-windowSurface = pygame.display.set_mode((WINDOWWIDTH, WINDOWHEIGHT), 0, 32)
+FULLHEIGHT = 500
+windowSurface = pygame.display.set_mode((WINDOWWIDTH, FULLHEIGHT), 0, 32)
 pygame.display.set_caption('Pong')
 
 # Set up background
@@ -20,6 +21,7 @@ gameBackgroundRect = pygame.Rect(0, 0, 800, 450)
 # Set up game constants
 BLACK = (0, 0, 0)
 MOVESPEED = 5
+CMOVESPEED = 3
 moveLeft = False
 moveRight = False
 moveUp = False
@@ -51,11 +53,14 @@ invalidPaddles = []
 SoundManager.getinstance().startgame()
 roundStart = True
 
+score.debug_setscore([8, 8])
+
 while True:
     # Clear and re-blit background
     windowSurface.fill(BLACK)
     windowSurface.blit(gameBackgroundImage, gameBackgroundRect)
     windowSurface.blit(ball.getimage(), ball.getrect())
+    score.displayscore(windowSurface)
 
     for paddle in playerPaddles:
         windowSurface.blit(paddle.getimage(), paddle.getrect())
@@ -112,9 +117,9 @@ while True:
         playerPaddleTop.moveright(WINDOWWIDTH, MOVESPEED)
         playerPaddleBottom.moveright(WINDOWWIDTH, MOVESPEED)
 
-    compPaddleTop.movehorizontal(WINDOWWIDTH, MOVESPEED, ball.getrect())
-    compPaddleBottom.movehorizontal(WINDOWWIDTH, MOVESPEED, ball.getrect())
-    compPaddleSide.movevertical(WINDOWHEIGHT, MOVESPEED, ball.getrect())
+    compPaddleTop.movehorizontal(WINDOWWIDTH, CMOVESPEED, ball.getrect())
+    compPaddleBottom.movehorizontal(WINDOWWIDTH, CMOVESPEED, ball.getrect())
+    compPaddleSide.movevertical(WINDOWHEIGHT, CMOVESPEED, ball.getrect())
 
     for paddle in invalidPaddles:
         paddle[1] += 1
