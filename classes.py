@@ -164,13 +164,11 @@ class Ball:
             self.__increasespeed()
 
     def __increasespeed(self):
-        print(self.__velocities)
         direction = random.randint(0, 1)
         if self.__velocities[direction] >= 0:
             self.__velocities[direction] += 1
         else:
             self.__velocities[direction] -= 1
-        print(self.__velocities)
         self.__hits = 0
 
 
