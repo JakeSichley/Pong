@@ -62,6 +62,14 @@ while True:
     windowSurface.blit(ball.getimage(), ball.getrect())
     score.displayscore(windowSurface)
 
+    if roundStart:
+        playerPaddleTop.resetposition(int(WINDOWWIDTH * .75) - 20, 0)
+        playerPaddleSide.resetposition(WINDOWWIDTH - 9, int(WINDOWHEIGHT / 2) - 20)
+        playerPaddleBottom.resetposition(int(WINDOWWIDTH * .75) - 20, WINDOWHEIGHT - 9)
+        compPaddleTop.resetposition(int(WINDOWWIDTH / 4) - 20, 0)
+        compPaddleSide.resetposition(0, int(WINDOWHEIGHT / 2) - 20)
+        compPaddleBottom.resetposition(int(WINDOWWIDTH / 4) - 20, WINDOWHEIGHT - 9)
+
     for paddle in playerPaddles:
         windowSurface.blit(paddle.getimage(), paddle.getrect())
 

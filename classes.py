@@ -13,6 +13,9 @@ class PlayerPaddle:
         self.__type = alignment
         self.__valid = True
 
+    def resetposition(self, left, top):
+        self.__rect = pygame.Rect(left, top, self.__image.get_size()[0], self.__image.get_size()[1])
+
     def getvalid(self):
         return self.__valid
 
@@ -51,6 +54,9 @@ class ComputerPaddle:
         self.__rect = pygame.Rect(left, top, self.__image.get_size()[0], self.__image.get_size()[1])
         self.__type = alignment
         self.__valid = True
+
+    def resetposition(self, left, top):
+        self.__rect = pygame.Rect(left, top, self.__image.get_size()[0], self.__image.get_size()[1])
 
     def getvalid(self):
         return self.__valid
