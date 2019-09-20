@@ -13,6 +13,9 @@ class PlayerPaddle:
         self.__type = alignment
         self.__valid = True
 
+    def resetposition(self, left, top):
+        self.__rect = pygame.Rect(left, top, self.__image.get_size()[0], self.__image.get_size()[1])
+
     def getvalid(self):
         return self.__valid
 
@@ -51,6 +54,9 @@ class ComputerPaddle:
         self.__rect = pygame.Rect(left, top, self.__image.get_size()[0], self.__image.get_size()[1])
         self.__type = alignment
         self.__valid = True
+
+    def resetposition(self, left, top):
+        self.__rect = pygame.Rect(left, top, self.__image.get_size()[0], self.__image.get_size()[1])
 
     def getvalid(self):
         return self.__valid
@@ -101,8 +107,9 @@ class Ball:
         self.__image = pygame.image.load(image)
         self.__rect = pygame.Rect(left, top, self.__image.get_size()[0], self.__image.get_size()[1])
         self.__collisionPending = False
+        self.__hits = 0
         # Set up x and y movement
-        movespeed = random.randint(6, 10)
+        movespeed = random.randint(6, 8)
         angle = random.randint(20, 55)
         self.__velocities = [int(movespeed * cos(radians(angle))), int(movespeed * sin(radians(angle)))]
         if random.randint(0, 1) == 0:
@@ -145,10 +152,26 @@ class Ball:
     def hithorizontal(self):
         self.__velocities[0] *= -1
         self.__collisionPending = False
+        self.__hits += 1
+        if self.__hits >= 6:
+            self.__increasespeed()
 
     def hitvertical(self):
         self.__velocities[1] *= -1
         self.__collisionPending = False
+        self.__hits += 1
+        if self.__hits >= 6:
+            self.__increasespeed()
+
+    def __increasespeed(self):
+        print(self.__velocities)
+        direction = random.randint(0, 1)
+        if self.__velocities[direction] >= 0:
+            self.__velocities[direction] += 1
+        else:
+            self.__velocities[direction] -= 1
+        print(self.__velocities)
+        self.__hits = 0
 
 
 # Singleton class SoundManager
@@ -186,6 +209,10 @@ class SoundManager:
             self.__computerwonround.set_volume(0.15)
             self.__newroundin = pygame.mixer.Sound('Resources\\newroundin.wav')
             self.__newroundin.set_volume(0.15)
+            self.__losingmusic = pygame.mixer.Sound('Resources\\losingmusic.wav')
+            self.__losingmusic.set_volume(0.15)
+            self.__winningmusic = pygame.mixer.Sound('Resources\\winningmusic.wav')
+            self.__winningmusic.set_volume(0.15)
             pygame.mixer.music.load('Resources\\music.ogg')
             self.__musicPlaying = False
 
@@ -201,6 +228,13 @@ class SoundManager:
         pygame.time.wait(1300)
         self.__announcerOne.play()
         pygame.time.wait(1300)
+
+    def endround(self, winner):
+        pygame.mixer.music.stop()
+        if winner == 0:
+            self.__losingmusic.play()
+        else:
+            self.__winningmusic.play()
 
     @staticmethod
     def threadedsound(function):
@@ -229,12 +263,12 @@ class SoundManager:
     def playerwonround(self):
         self.__playerwonround.play()
         pygame.time.wait(3000)
-        self.__newroundin.play()
-        pygame.time.wait(2000)
 
     def computerwonround(self):
         self.__computerwonround.play()
         pygame.time.wait(3000)
+
+    def nextround(self):
         self.__newroundin.play()
         pygame.time.wait(2000)
 
@@ -244,9 +278,21 @@ class ScoreManager:
     def __init__(self):
         self.__roundScores = [0, 0]
         self.__matches = [0, 0]
+        self.__gameover = False
 
-    def debug_setscore(self, scores):
-        self.__roundScores = scores
+    def getgameover(self):
+        return self.__gameover
+
+    def getwinner(self):
+        if self.__matches[0] >= 3:
+            return 0
+        else:
+            return 1
+
+    def reset(self):
+        self.__roundScores = [0, 0]
+        self.__matches = [0, 0]
+        self.__gameover = False
 
     def computerscored(self, soundmanager):
         self.__roundScores[0] += 1
@@ -273,10 +319,18 @@ class ScoreManager:
     def __endroundcomputer(self, soundmanager):
         self.__roundScores = [0, 0]
         soundmanager.threadedsound(soundmanager.computerwonround)
+        if self.__matches[0] >= 3:
+            self.__gameover = True
+        else:
+            soundmanager.threadedsound(soundmanager.nextround)
 
     def __endroundplayer(self, soundmanager):
         self.__roundScores = [0, 0]
         soundmanager.threadedsound(soundmanager.playerwonround)
+        if self.__matches[1] >= 3:
+            self.__gameover = True
+        else:
+            soundmanager.threadedsound(soundmanager.nextround)
 
     def displayscore(self, windowsurface):
         # Computer Score
@@ -312,7 +366,80 @@ class ScoreManager:
             return scorea + (2 - abs(scorea - scoreb))
 
 
-class Paddle:
-    def __init__(self, image, left, top):
-        self.image = pygame.image.load(image)
-        self.rect = pygame.Rect(left, top, self.image.get_size()[0], self.image.get_size()[1])
+class MenuManager:
+    def __init__(self, surface):
+        self.__windowsurface = surface
+
+    def startingmenu(self):
+        font = pygame.font.Font('Resources\\gameover.ttf', 100)
+        text = 'Welcome to Pong!'
+        textsurface = font.render(text, True, (255, 255, 255))
+        textrect = textsurface.get_rect()
+        textrect.center = (400, 125)
+        self.__windowsurface.blit(textsurface, textrect)
+
+        font = pygame.font.Font('Resources\\gameover.ttf', 60)
+        text = '-/+ keys can be used to adjust computer paddle speed!'
+        textsurface = font.render(text, True, (255, 255, 255))
+        textrect = textsurface.get_rect()
+        textrect.center = (400, 250)
+        self.__windowsurface.blit(textsurface, textrect)
+
+        text = 'Ball speed increases every 6th hit!'
+        textsurface = font.render(text, True, (255, 255, 255))
+        textrect = textsurface.get_rect()
+        textrect.center = (400, 325)
+        self.__windowsurface.blit(textsurface, textrect)
+
+        text = 'Press \'Y\' to start or \'N\' to exit!'
+        textsurface = font.render(text, True, (255, 255, 255))
+        textrect = textsurface.get_rect()
+        textrect.center = (400, 400)
+        self.__windowsurface.blit(textsurface, textrect)
+
+        pygame.display.update()
+        waitforinput = True
+
+        while waitforinput:
+            for event in pygame.event.get():
+                if event.type == QUIT:
+                    pygame.quit()
+                    sys.exit()
+                if event.type == KEYDOWN:
+                    if event.key == K_n:
+                        pygame.quit()
+                        sys.exit()
+                    if event.key == K_y:
+                        waitforinput = False
+
+    def endingmenu(self, winner):
+        self.__windowsurface.fill((0, 0, 0))
+
+        font = pygame.font.Font('Resources\\gameover.ttf', 100)
+        text = 'The Computer Won!' if winner == 0 else 'You Won!'
+        textsurface = font.render(text, True, (255, 255, 255))
+        textrect = textsurface.get_rect()
+        textrect.center = (400, 125)
+        self.__windowsurface.blit(textsurface, textrect)
+
+        font = pygame.font.Font('Resources\\gameover.ttf', 60)
+        text = 'Press \'Y\' to play again or \'N\' to exit!'
+        textsurface = font.render(text, True, (255, 255, 255))
+        textrect = textsurface.get_rect()
+        textrect.center = (400, 325)
+        self.__windowsurface.blit(textsurface, textrect)
+
+        pygame.display.update()
+        waitforinput = True
+
+        while waitforinput:
+            for event in pygame.event.get():
+                if event.type == QUIT:
+                    pygame.quit()
+                    sys.exit()
+                if event.type == KEYDOWN:
+                    if event.key == K_n:
+                        pygame.quit()
+                        sys.exit()
+                    if event.key == K_y:
+                        waitforinput = False
